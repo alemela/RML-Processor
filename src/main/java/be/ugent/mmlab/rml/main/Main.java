@@ -7,9 +7,18 @@ import be.ugent.mmlab.rml.core.StdMetadataRMLEngine;
 import be.ugent.mmlab.rml.mapdochandler.extraction.std.StdRMLMappingFactory;
 import be.ugent.mmlab.rml.mapdochandler.retrieval.RMLDocRetrieval;
 import be.ugent.mmlab.rml.model.RMLMapping;
+import be.ugent.mmlab.rml.processor.StdObjectMapProcessor;
+import static be.ugent.mmlab.rml.processor.StdObjectMapProcessor.pcModel;
+import com.hp.hpl.jena.rdf.model.Model;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.commons.cli.CommandLine;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.log4j.BasicConfigurator;
 import org.openrdf.repository.Repository;
 import org.openrdf.rio.RDFFormat;
@@ -87,9 +96,9 @@ public class Main {
             log.info("Retrieving the RML Mapping Document...");
             log.info("========================================");
             RMLDocRetrieval mapDocRetrieval = new RMLDocRetrieval();
-            Repository repository = 
+            Repository repository =
                     mapDocRetrieval.getMappingDoc(map_doc, RDFFormat.TURTLE);
-            
+
             if(repository == null){
                 log.debug("Problem retrieving the RML Mapping Document");
                 System.exit(1);
@@ -128,12 +137,17 @@ public class Main {
                         metadataLevel, metadataFormat, metadataVocab);
             }
 
+            try {
+                publishRDF(outputFile, pcModel);
+            } catch (FileNotFoundException ex) {
+                java.util.logging.Logger.getLogger(StdObjectMapProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            }
             System.exit(0);
             
         } catch (Exception ex) {
-            System.exit(1);
             log.error("Exception " + ex);
             RMLConfiguration.displayHelp();
+            System.exit(1);
         } 
 
     }
@@ -160,4 +174,12 @@ public class Main {
 
         return parameters;
     }
+    
+    private static void publishRDF(String filePath, Model model) throws FileNotFoundException {
+        File file = new File(filePath.replaceAll("(.+)/[^/]+", "$1"));
+        file.mkdirs();
+        OutputStream outTurtle = new FileOutputStream(new File(filePath),true);
+        RDFDataMgr.write(outTurtle, model, org.apache.jena.riot.RDFFormat.NTRIPLES);
+    }
+    
 }

@@ -3,6 +3,7 @@ package be.ugent.mmlab.rml.processor;
 import be.ugent.mmlab.rml.condition.model.BindingCondition;
 import be.ugent.mmlab.rml.condition.model.Condition;
 import be.ugent.mmlab.rml.condition.model.std.StdJoinConditionMetric;
+import static be.ugent.mmlab.rml.dataset.JenaSesameUtils.asJenaNode;
 import be.ugent.mmlab.rml.model.std.ConditionReferencingObjectMap;
 import be.ugent.mmlab.rml.input.processor.AbstractInputProcessor;
 import be.ugent.mmlab.rml.input.processor.SourceProcessor;
@@ -24,6 +25,10 @@ import be.ugent.mmlab.rml.processor.concrete.ConcreteRMLProcessorFactory;
 import be.ugent.mmlab.rml.processor.concrete.ConcreteTermMapFactory;
 import be.ugent.mmlab.rml.processor.concrete.TermMapProcessorFactory;
 import be.ugent.mmlab.rml.vocabularies.QLVocabulary;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.rdf.model.Statement;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
@@ -64,11 +68,13 @@ public class StdObjectMapProcessor implements ObjectMapProcessor {
                 map.getLogicalSource().getReferenceFormulation(), processor);
     }
     
+    public static Model pcModel = ModelFactory.createDefaultModel();
+    
     @Override
     public void processPredicateObjectMap_ObjMap(
             RMLDataset dataset, Resource subject, URI predicate,
             PredicateObjectMap pom, Object node, GraphMap graphMap) {
-
+        
         Set<ObjectMap> objectMaps = pom.getObjectMaps();
         for (ObjectMap objectMap : objectMaps) {
             if(objectMap == null)
@@ -97,17 +103,13 @@ public class StdObjectMapProcessor implements ObjectMapProcessor {
 
                 for (Value object : objects) {
                     if (object.stringValue() != null) {
-                        if (graphMap == null && subject != null) {
-                            //TODO: This control is redundant, ignore it if needed
-                            List<Statement> triples =
-                                    dataset.tuplePattern(subject, predicate, object);
-                            if(triples.size() == 0){
-                                dataset.add(subject, predicate, object, graphResource);
-                            }
-                        } else {
-                            dataset.add(subject, predicate, object, graphResource);
-                        }
-
+                        //dataset.add(subject, predicate, object, graphResource);
+                        log.info("Pushed triple");
+                        Statement t = ResourceFactory.createStatement(
+                                ResourceFactory.createResource(subject.stringValue()), 
+                                ResourceFactory.createProperty(predicate.stringValue()), 
+                                asJenaNode(object));
+                        pcModel.add(t);
                     }
                 }
             } else {
