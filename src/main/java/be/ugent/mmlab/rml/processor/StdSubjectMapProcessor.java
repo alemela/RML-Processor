@@ -1,6 +1,7 @@
 package be.ugent.mmlab.rml.processor;
 
 import be.ugent.mmlab.rml.condition.model.Condition;
+import static be.ugent.mmlab.rml.dataset.JenaSesameUtils.asJenaNode;
 import be.ugent.mmlab.rml.logicalsourcehandler.termmap.TermMapProcessor;
 import static be.ugent.mmlab.rml.model.RDFTerm.TermType.BLANK_NODE;
 import static be.ugent.mmlab.rml.model.RDFTerm.TermType.IRI;
@@ -9,17 +10,24 @@ import be.ugent.mmlab.rml.model.RDFTerm.SubjectMap;
 import be.ugent.mmlab.rml.model.TriplesMap;
 import be.ugent.mmlab.rml.model.dataset.RMLDataset;
 import be.ugent.mmlab.rml.model.std.StdConditionSubjectMap;
+import static be.ugent.mmlab.rml.processor.StdObjectMapProcessor.pcModel;
 import be.ugent.mmlab.rml.processor.concrete.ConcreteTermMapFactory;
 import be.ugent.mmlab.rml.processor.concrete.TermMapProcessorFactory;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang.RandomStringUtils;
 import org.openrdf.model.Resource;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 /**
  * RML Processor
@@ -134,16 +142,21 @@ public class StdSubjectMapProcessor implements SubjectMapProcessor {
                     //List<Statement> triples =
                     //        dataset.tuplePattern(subject, RDF.TYPE, classIRI);
                     //if (triples.size() == 0) {
-                        dataset.add(subject, RDF.TYPE, classIRI);
+                        //dataset.add(subject, RDF.TYPE, classIRI);
+                        Statement t = ResourceFactory.createStatement(
+                                ResourceFactory.createResource(subject.stringValue()),
+                                RDF.type,
+                                asJenaNode(classIRI));
+                        pcModel.add(t);
                     //}
-                } else {
+                /*} else {
                     for (GraphMap graphMap : subjectMap.getGraphMaps()) {
                         if (graphMap.getConstantValue() != null) {
                             dataset.add(
                                     subject, RDF.TYPE, classIRI,
                                     new URIImpl(graphMap.getConstantValue().toString()));
                         }
-                    }
+                    }*/
                 }
             }
         }
