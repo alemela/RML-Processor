@@ -44,6 +44,7 @@ public class Main {
         String[] exeTriplesMap = null;
         Map<String, String> parameters = null;
         BasicConfigurator.configure();
+        org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.WARN);
         CommandLine commandLine;
         StdRMLMappingFactory mappingFactory = new StdRMLMappingFactory();
         
